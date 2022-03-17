@@ -71,7 +71,7 @@ $dataDir = Data::getInstance()->getDirectoryByMeta($metadataPrefix);
 
 // Check dataDir permissions
 if (!is_dir($dataDir) || !is_writable($dataDir)) {
-    Helper::cliError("Error: $dataDir not writable");
+	Helper::cliError("Error: $dataDir not writable");
 }
 
 // Alright, let's start!
@@ -105,12 +105,17 @@ $files = [
     'deleted' => 0,
     'total' => count($newFiles)
 ];
-foreach ($todo as $identifier => $task) {
+foreach ($todo as $relativeFilePath => $task) {
     echo "  Checking record $identifier ... ";
-    if ($task === 'update') {
-        if (!file_exists($dataDir.$identifier.'.xml')) {
-            // Add file
-            if (copy($sourceDir.$identifier.'.xml', $dataDir.$identifier.'.xml')) {
+    if ('update' === $task) {
+        if (!is_file($dataDir . $relativeFilePath)) {
+            $dirname = dirname( $dataDir . $relativeFilePath );
+            if ( !is_dir($dirname) ) {
+                if (!mkdir($dirname, 0777, true)) {
+                    Helper::cliError("Error: $dirname not writable");
+                }
+            }
+            if (copy($sourceDir . $relativeFilePath, $dataDir . $relativeFilePath)) {
                 echo Helper::CliFormat('added', 'green') . PHP_EOL;
                 $files['added']++;
             } else {
@@ -119,7 +124,7 @@ foreach ($todo as $identifier => $task) {
             }
         } elseif (md5_file($sourceDir . $relativeFilePath) !== md5_file($dataDir . $relativeFilePath)) {
             // Replace file
-            if (copy($sourceDir.$identifier.'.xml', $dataDir.$identifier.'.xml')) {
+            if (copy($sourceDir . $relativeFilePath, $dataDir . $relativeFilePath)) {
                 echo Helper::CliFormat('updated', 'green') . PHP_EOL;
                 $files['updated']++;
             } else {
@@ -132,7 +137,7 @@ foreach ($todo as $identifier => $task) {
     } elseif ($task === 'delete') {
         if (filesize($dataDir . $relativeFilePath) !== 0) {
             // Truncate file
-            if (fclose(fopen($dataDir.$identifier.'.xml', 'w'))) {
+            if (fclose(fopen($dataDir . $relativeFilePath, 'wb'))) {
                 echo Helper::CliFormat('deleted', 'green') . PHP_EOL;
                 $files['deleted']++;
             } else {
