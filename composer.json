@@ -1,5 +1,5 @@
 {
-    "name": "beapi/oai_pmh",
+    "name": "ross-spencer/oai_pmh",
     "description": "This is a stand-alone and easy to install data provider implementing the Open Archives Initiative's Protocol for Metadata Harvesting (OAI-PMH).",
     "type": "project",
     "keywords": [
@@ -10,7 +10,7 @@
         "repository",
         "sets"
     ],
-    "homepage": "https://github.com/BeAPI/oai_pmh",
+    "homepage": "https://github.com/ross-spencer/oai_pmh",
     "readme": "README.md",
     "license": ["GPL-3.0-or-later"],
     "authors": [
@@ -48,9 +48,9 @@
         }
     ],
     "support": {
-        "issues": "https://github.com/BeAPI/oai_pmh/issues",
-        "source": "https://github.com/BeAPI/oai_pmh",
-        "docs": "https://github.com/BeAPI/oai_pmh/blob/master/README.md"
+        "issues": "https://github.com/ross-spencer/oai_pmh/issues",
+        "source": "https://github.com/ross-spencer/oai_pmh",
+        "docs": "https://github.com/BeAPI/ross-spencer/blob/master/README.md"
     },
     "require": {
         "php": "^7.0",
