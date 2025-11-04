@@ -38,6 +38,12 @@ class Server
     private $max_records = 100;
     private $token_prefix = '';
     private $token_valid = 86400;
+    private $identifyResponse;
+    private $listMetadataFormatsCallback;
+    private $listRecordsCallback;
+    private $listSetsCallback;
+    private $getRecordCallback;
+    private $response;
 
     const NS_URI_OAI_DC = 'http://www.openarchives.org/OAI/2.0/oai_dc/';
     const NS_URI_DC = 'http://purl.org/dc/elements/1.1/';
@@ -77,7 +83,7 @@ class Server
         $errorResponse = new Response($this->uri, $this->verb, $this->args);
         $oai_node = $errorResponse->doc->documentElement;
         foreach ($this->errors as $e) {
-            /** @var $e Exception */
+            /** @var Exception $e */
             $node = $errorResponse->addChild($oai_node, 'error', $e->getMessage());
             $node->setAttribute('code', $e->getOAI2Code());
         }
@@ -197,7 +203,7 @@ class Server
                 if ($records_count - $deliveredRecords > $maxItems) {
                     $deliveredRecords += $maxItems;
                     $restoken = $this->createResumptionToken($deliveredRecords, 'sets');
-                    $expirationDatetime = gmstrftime('%Y-%m-%dT%TZ', time() + $this->token_valid);
+                    $expirationDatetime = gmdate('Y-m-d\TH:i:s\Z', time() + $this->token_valid);
                 } elseif (isset($this->args['resumptionToken'])) {
                     // Last delivery, return empty resumptionToken
                     $restoken = null;
@@ -305,7 +311,7 @@ class Server
                     $this->listRecordsCallback,
                     $metadataPrefix,
                     $this->formatTimestamp($from),
-                    $this->formatTimestamp($until),
+                    $this->formatTimestamp($until, true),
                     $set,
                     true
                 ))) {
@@ -315,13 +321,13 @@ class Server
                     $this->listRecordsCallback,
                     $metadataPrefix,
                     $this->formatTimestamp($from),
-                    $this->formatTimestamp($until),
+                    $this->formatTimestamp($until, true),
                     $set,
                     false,
                     $deliveredRecords,
                     $maxItems
                 );
-
+                
                 if ('ListIdentifiers' === $this->verb) {
                     $cur_record = $this->response->addToVerbNode($this->verb, null, true);
 
@@ -345,7 +351,7 @@ class Server
                         $until,
                         $set
                     );
-                    $expirationDatetime = gmstrftime('%Y-%m-%dT%TZ', time() + $this->token_valid);
+                    $expirationDatetime = gmdate('Y-m-d\TH:i:s\Z', time() + $this->token_valid);
                 } elseif (isset($this->args['resumptionToken'])) {
                     // Last delivery, return empty resumptionToken
                     $restoken = null;
@@ -453,22 +459,32 @@ class Server
         return gmdate('Y-m-d\TH:i:s\Z', $timestamp);
     }
 
-    private function formatTimestamp($datestamp)
+    private function formatTimestamp($datestamp, $isUntil = false)
     {
-        if (is_array($time = strptime($datestamp, '%Y-%m-%dT%H:%M:%SZ')) || is_array(
-                $time = strptime($datestamp, '%Y-%m-%d')
-            )) {
-            return gmmktime(
-                $time['tm_hour'],
-                $time['tm_min'],
-                $time['tm_sec'],
-                $time['tm_mon'] + 1,
-                $time['tm_mday'],
-                $time['tm_year'] + 1900
-            );
+        if (empty($datestamp)) {
+            return null;
         }
 
-        return null;
+        // Try to parse as datetime first (Y-m-d\TH:i:s\Z format)
+        $datetime = \DateTime::createFromFormat('Y-m-d\TH:i:s\Z', $datestamp, new \DateTimeZone('UTC'));
+        $isDateOnly = false;
+        
+        if ($datetime === false) {
+            // Try to parse as date only (Y-m-d format)
+            $datetime = \DateTime::createFromFormat('Y-m-d', $datestamp, new \DateTimeZone('UTC'));
+            $isDateOnly = true;
+        }
+
+        if ($datetime === false) {
+            return null;
+        }
+
+        // For 'until' with date-only format, set to end of day (23:59:59)
+        if ($isUntil && $isDateOnly) {
+            $datetime->setTime(23, 59, 59);
+        }
+
+        return $datetime->getTimestamp();
     }
 
     private function checkDateFormat($date)
@@ -477,8 +493,25 @@ class Server
         if ($datetime === false) {
             $datetime = \DateTime::createFromFormat('Y-m-d', $date);
         }
+        
+        if ($datetime === false) {
+            return false;
+        }
 
-        return ($datetime !== false) && !array_sum($datetime::getLastErrors());
+        // For PHP 7.3+, use static method, for older versions use instance method
+        if (PHP_VERSION_ID >= 70300) {
+            $errors = \DateTime::getLastErrors();
+        } else {
+            $errors = $datetime->getLastErrors();
+        }
+
+        // getLastErrors() returns false if no errors occurred, or an array if errors occurred
+        if ($errors === false) {
+            return true; // No errors, date is valid
+        }
+
+        // Check if there are any errors in the array
+        return !array_sum($errors);
     }
 
 }

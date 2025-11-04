@@ -9,8 +9,6 @@ Just put the records as XML files in the data directory, create directory to sto
 
 A demo installation (original project) can be found [here](https://demo.opencultureconsulting.com/oai_pmh/?verb=Identify).
 
-[![CodeFactor](https://www.codefactor.io/repository/github/beapi/oai_pmh/badge)](https://www.codefactor.io/repository/github/beapi/oai_pmh)
-
 ## Installation
 
 1. Run `composer create-project beapi/oai_pmh <path>`.

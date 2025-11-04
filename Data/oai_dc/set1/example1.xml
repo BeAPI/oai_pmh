@@ -2,7 +2,7 @@
 <record>
   <header>
     <identifier>example1</identifier>
-    <datestamp>2002-05-01T14:16:12Z</datestamp>
+    <datestamp>2024-05-01T14:16:12Z</datestamp>
     <setSpec>set1</setSpec>
   </header>
   <metadata><oai_dc:dc xmlns:oai_dc="http://www.openarchives.org/OAI/2.0/oai_dc/" xmlns:dc="http://purl.org/dc/elements/1.1/"

@@ -144,10 +144,10 @@ class Data
 
                 $this->records[$metadataPrefix][$fileName] = $filePath;
                 $this->deleted[$metadataPrefix][$fileName] = !filesize($filePath);
-                $this->timestamps[$metadataPrefix][$fileName] = filemtime($filePath);
+                $this->timestamps[$metadataPrefix][$fileName] = $this->extractDatestampFromXml($filePath);
 
-                if (filemtime($filePath) < $this->earliest) {
-                    $this->earliest = filemtime($filePath);
+                if ($this->timestamps[$metadataPrefix][$fileName] < $this->earliest) {
+                    $this->earliest = $this->timestamps[$metadataPrefix][$fileName];
                 }
             }
 
@@ -222,5 +222,54 @@ class Data
         }
 
         return false;
+    }
+
+    /**
+     * Extract datestamp from XML record file.
+     * Falls back to file modification time if XML parsing fails or file is empty.
+     *
+     * @param string $filePath Path to the XML file
+     * @return int Unix timestamp
+     */
+    private function extractDatestampFromXml($filePath)
+    {
+        // For empty files (deleted records), use file modification time
+        if (filesize($filePath) === 0) {
+            return filemtime($filePath);
+        }
+
+        // Try to load and parse the XML file
+        $doc = new \DOMDocument();
+        libxml_use_internal_errors(true);
+        $loaded = $doc->load($filePath);
+        libxml_clear_errors();
+
+        if (!$loaded) {
+            // If XML parsing fails, fall back to file modification time
+            return filemtime($filePath);
+        }
+
+        // Extract datestamp from header
+        // Note: We don't use namespace here as the XML files may not have namespace declarations
+        $xpath = new \DOMXPath($doc);
+        $datestampNodes = $xpath->query('/record/header/datestamp');
+        
+        if ($datestampNodes->length > 0) {
+            $datestampString = trim($datestampNodes->item(0)->nodeValue);
+            
+            // Parse the datestamp (format: YYYY-MM-DDThh:mm:ssZ or YYYY-MM-DD)
+            $datetime = \DateTime::createFromFormat('Y-m-d\TH:i:s\Z', $datestampString, new \DateTimeZone('UTC'));
+            if ($datetime === false) {
+                // Try date-only format
+                $datetime = \DateTime::createFromFormat('Y-m-d', $datestampString, new \DateTimeZone('UTC'));
+            }
+            
+            if ($datetime !== false) {
+                return $datetime->getTimestamp();
+            }
+        }
+
+        // Fall back to file modification time if datestamp extraction fails
+        return filemtime($filePath);
     }
 }

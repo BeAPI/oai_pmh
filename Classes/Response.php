@@ -26,6 +26,8 @@ namespace OCC\OAI2;
 class Response
 {
     public $doc; // DOMDocument. Handle of current XML Document object
+    public $verb; // string. The OAI-PMH verb
+    public $verbNode; // \DOMElement. The verb node in the XML document
 
     public function __construct($uri, $verb, $request_args)
     {
@@ -77,6 +79,8 @@ class Response
      */
     public function addChild($mom_node, $name, $value = ''): \DOMElement
     {
+        // Convert null to empty string to avoid deprecation warning in PHP 8.1+
+        $value = $value ?? '';
         $added_node = $this->doc->createElement($name, $value);
         $added_node = $mom_node->appendChild($added_node);
 

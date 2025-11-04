@@ -1,0 +1,55 @@
+<?xml version="1.0"?>
+<ruleset name="OAI-PMH">
+    <description>PHP CodeSniffer configuration for OAI-PMH project</description>
+
+    <!-- Include the entire project -->
+    <file>.</file>
+
+    <!-- Exclude vendor and other directories -->
+    <exclude-pattern>*/vendor/*</exclude-pattern>
+    <exclude-pattern>*/node_modules/*</exclude-pattern>
+    <exclude-pattern>*/Data/*</exclude-pattern>
+    <exclude-pattern>*/DataImport/*</exclude-pattern>
+    <exclude-pattern>*/Resources/*</exclude-pattern>
+    <exclude-pattern>*.md</exclude-pattern>
+    <exclude-pattern>*.txt</exclude-pattern>
+    <exclude-pattern>*.json</exclude-pattern>
+    <exclude-pattern>*.xml</exclude-pattern>
+    <exclude-pattern>*.xsl</exclude-pattern>
+    <exclude-pattern>.ddev/*</exclude-pattern>
+
+    <!-- Show progress -->
+    <arg value="p"/>
+
+    <!-- Show colors -->
+    <arg name="colors"/>
+
+    <!-- Show sniff codes in all reports -->
+    <arg value="s"/>
+
+    <!-- Report width -->
+    <arg name="report-width" value="120"/>
+
+    <!-- PHPCompatibility will be automatically installed by dealerdirect/phpcodesniffer-composer-installer -->
+    <!-- No need to set installed_paths manually -->
+
+    <!-- Use PSR-12 coding standard as base -->
+    <rule ref="PSR12"/>
+
+    <!-- PHP Compatibility Check for PHP 8.3 -->
+    <rule ref="PHPCompatibility">
+        <config name="testVersion" value="8.3"/>
+    </rule>
+
+    <!-- Line length -->
+    <rule ref="Generic.Files.LineLength">
+        <properties>
+            <property name="lineLimit" value="120"/>
+            <property name="absoluteLineLimit" value="140"/>
+        </properties>
+    </rule>
+
+    <!-- Allow short array syntax (PSR-12 already allows it) -->
+    <!-- Enforce tabs for indentation (PSR-12 standard) -->
+</ruleset>
+
